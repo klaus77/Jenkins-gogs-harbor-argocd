@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-agent-2
+  namespace: kube-ops
+spec:
+  selector:
+    matchLabels:
+      app: jenkins-agent-2
+  template:
+    metadata:
+      labels:
+        app: jenkins-agent-2
+    spec:
+      containers:
+        - name: agent
+          image: jenkins/inbound-agent
+          securityContext:
+            privileged: true
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: JENKINS_URL
+              value: http://jenkins:8080
+            - name: JENKINS_SECRET
+              value: 536f10c81e31c0daa97eb6bd662385696085570d71be7280c5107887772a42d9
+            - name: JENKINS_AGENT_NAME
+              value: slave-1
+            - name: JENKINS_AGENT_WORKDIR
+              value: /home/jenkins/workspace

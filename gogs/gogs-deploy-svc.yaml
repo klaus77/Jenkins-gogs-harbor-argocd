@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gogs
+  namespace: kube-ops
+spec:
+  selector:
+    matchLabels:
+      app: gogs
+  template:
+    metadata:
+      labels:
+        app: gogs
+    spec:
+      containers:
+        - name: gogs
+          image: gogs/gogs:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: web
+              protocol: TCP
+          volumeMounts:
+            - name: gogshome
+              mountPath: /data
+      volumes:
+        - name: gogshome
+          persistentVolumeClaim:
+            claimName: gogs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gogs
+  namespace: kube-ops
+  labels:
+    app: gogs
+spec:
+  selector:
+    app: gogs
+  ports:
+    - name: web
+      port: 80
+      targetPort: web
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gogs
+  namespace: kube-ops
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: gogs.klaus.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gogs
+                port:
+                  name: web
